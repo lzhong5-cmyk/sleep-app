@@ -1,0 +1,967 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>眠界 · Nightveil</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,500&family=Noto+Serif+SC:wght@400;600&family=Manrope:wght@300;400;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --void:#0b0a22;
+    --twilight:#1c1640;
+    --iris:#4b3f8c;
+    --lavender:#b9a7f0;
+    --glow:#9d7fea;
+    --moon:#f3ecff;
+    --dim:#8b84b8;
+    --danger:#e79aa8;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{
+    height:100%;
+    background:#050418;
+    font-family:'Noto Sans SC','Manrope',sans-serif;
+    color:var(--moon);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    overflow:hidden;
+  }
+  .stage{
+    width:100%;
+    height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    position:relative;
+  }
+
+  /* ambient starfield behind phone */
+  .stage::before{
+    content:'';
+    position:absolute; inset:0;
+    background:
+      radial-gradient(1px 1px at 10% 20%, rgba(255,255,255,.5), transparent),
+      radial-gradient(1px 1px at 80% 15%, rgba(255,255,255,.4), transparent),
+      radial-gradient(1.5px 1.5px at 60% 70%, rgba(255,255,255,.35), transparent),
+      radial-gradient(1px 1px at 30% 85%, rgba(255,255,255,.4), transparent),
+      radial-gradient(1px 1px at 90% 60%, rgba(255,255,255,.3), transparent),
+      radial-gradient(1.5px 1.5px at 45% 40%, rgba(255,255,255,.3), transparent);
+    opacity:.7;
+  }
+
+  .phone{
+    width:390px;
+    height:820px;
+    border-radius:46px;
+    background:linear-gradient(165deg, var(--void), #120e30 55%, #0b0a22);
+    position:relative;
+    overflow:hidden;
+    box-shadow:
+      0 0 0 10px #05041a,
+      0 0 0 11px #2a2456,
+      0 40px 90px -20px rgba(80,50,180,.45),
+      0 0 120px -30px rgba(157,127,234,.35);
+  }
+  .notch{
+    position:absolute; top:14px; left:50%; transform:translateX(-50%);
+    width:120px; height:26px; background:#05041a; border-radius:20px; z-index:50;
+  }
+
+  /* soft moving nebula glows */
+  .glow{position:absolute; border-radius:50%; filter:blur(60px); pointer-events:none;}
+  .glow-1{width:260px; height:260px; background:radial-gradient(circle, rgba(157,127,234,.35), transparent 70%); top:-60px; left:-60px; animation:drift1 14s ease-in-out infinite;}
+  .glow-2{width:220px; height:220px; background:radial-gradient(circle, rgba(75,63,140,.4), transparent 70%); bottom:60px; right:-60px; animation:drift2 16s ease-in-out infinite;}
+  @keyframes drift1{0%,100%{transform:translate(0,0);}50%{transform:translate(20px,30px);}}
+  @keyframes drift2{0%,100%{transform:translate(0,0);}50%{transform:translate(-15px,-25px);}}
+
+  .screen{
+    position:absolute; inset:0;
+    padding:70px 26px 40px;
+    display:flex;
+    flex-direction:column;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .5s ease;
+  }
+  .screen.active{opacity:1; pointer-events:auto;}
+
+  /* ---------- HOME ---------- */
+  .eyebrow{
+    font-size:11px; letter-spacing:.28em; text-transform:uppercase;
+    color:var(--dim); margin-bottom:6px; font-weight:500;
+  }
+  .brand{
+    font-family:'Cormorant Garamond','Noto Serif SC',serif;
+    font-size:34px; font-weight:600; color:var(--moon);
+    letter-spacing:.02em;
+    margin-bottom:2px;
+  }
+  .brand-sub{font-size:12.5px; color:var(--dim); margin-bottom:32px; font-weight:300;}
+
+  .moon-wrap{
+    display:flex; align-items:center; justify-content:center;
+    margin:6px 0 30px;
+  }
+  .moon{
+    width:132px; height:132px; border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, #fdfbff, #d9caf8 45%, var(--iris) 100%);
+    box-shadow:0 0 50px 6px rgba(185,167,240,.5), 0 0 100px 30px rgba(120,90,200,.25);
+    animation:breathe 4.5s ease-in-out infinite;
+    position:relative;
+  }
+  .moon::after{
+    content:'';
+    position:absolute; inset:0; border-radius:50%;
+    background:radial-gradient(circle at 68% 62%, rgba(75,63,140,.35), transparent 45%);
+  }
+  @keyframes breathe{0%,100%{transform:scale(1); box-shadow:0 0 50px 6px rgba(185,167,240,.5), 0 0 100px 30px rgba(120,90,200,.25);}50%{transform:scale(1.05); box-shadow:0 0 65px 10px rgba(185,167,240,.7), 0 0 130px 40px rgba(120,90,200,.35);}}
+
+  .card{
+    background:linear-gradient(160deg, rgba(75,63,140,.28), rgba(28,22,64,.5));
+    border:1px solid rgba(185,167,240,.18);
+    border-radius:20px;
+    padding:18px 20px;
+    margin-bottom:14px;
+    backdrop-filter:blur(6px);
+  }
+  .card-row{display:flex; align-items:center; justify-content:space-between;}
+  .card-title{font-size:14.5px; font-weight:500; color:var(--moon);}
+  .card-desc{font-size:12px; color:var(--dim); margin-top:4px; font-weight:300;}
+
+  .switch{
+    width:46px; height:26px; border-radius:20px;
+    background:rgba(139,132,184,.25);
+    position:relative; cursor:pointer;
+    transition:background .3s ease;
+    border:1px solid rgba(185,167,240,.25);
+  }
+  .switch.on{background:linear-gradient(120deg, var(--glow), var(--iris));}
+  .switch-knob{
+    position:absolute; top:2px; left:3px;
+    width:20px; height:20px; border-radius:50%;
+    background:var(--moon);
+    transition:left .3s ease;
+    box-shadow:0 2px 6px rgba(0,0,0,.3);
+  }
+  .switch.on .switch-knob{left:23px;}
+
+  .time-row{display:flex; gap:10px; margin-top:14px;}
+  .time-pill{
+    flex:1; text-align:center; padding:10px 0;
+    border-radius:14px; font-size:12.5px; color:var(--dim);
+    border:1px solid rgba(139,132,184,.25);
+    cursor:pointer; transition:all .25s ease;
+  }
+  .time-pill.selected{
+    color:var(--void); background:linear-gradient(120deg,var(--lavender),var(--glow));
+    border-color:transparent; font-weight:600;
+  }
+
+  .primary-btn{
+    margin-top:auto;
+    background:linear-gradient(135deg, var(--glow), #7a5fd4 60%, #6b4fc4);
+    position:relative; overflow:hidden;
+    color:var(--moon); border:none; border-radius:16px;
+    padding:16px; font-size:14.5px; font-weight:600;
+    letter-spacing:.03em; cursor:pointer;
+    box-shadow:0 10px 30px -8px rgba(157,127,234,.6), inset 0 1px 0 rgba(255,255,255,.25);
+    transition:transform .2s ease;
+  }
+  .primary-btn::after{
+    content:''; position:absolute; top:0; left:-60%; width:40%; height:100%;
+    background:linear-gradient(120deg, transparent, rgba(255,255,255,.18), transparent);
+    transform:skewX(-20deg);
+  }
+  .primary-btn:active{transform:scale(.97);}
+  .ghost-btn{
+    background:transparent; border:1px solid rgba(185,167,240,.3);
+    color:var(--lavender); border-radius:16px; padding:15px;
+    font-size:13.5px; font-weight:500; cursor:pointer; margin-top:10px;
+    transition:all .2s ease;
+  }
+  .ghost-btn:active{transform:scale(.97);}
+
+  /* ---------- REMINDER MODAL ---------- */
+  .modal-screen{
+    justify-content:center; align-items:center; text-align:center;
+    background:radial-gradient(circle at 50% 30%, rgba(75,63,140,.5), var(--void) 75%);
+  }
+  .modal-icon{font-size:38px; margin-bottom:18px; filter:drop-shadow(0 0 14px rgba(185,167,240,.6));}
+  .modal-text{
+    font-family:'Noto Serif SC', serif;
+    font-size:19px; line-height:1.75; color:var(--moon);
+    font-weight:400; margin-bottom:8px;
+  }
+  .modal-sub{font-size:12.5px; color:var(--dim); margin-bottom:36px; line-height:1.6; font-weight:300;}
+
+  /* ---------- TIMER PICK ---------- */
+  .duration-grid{display:flex; gap:12px; margin:26px 0 30px;}
+  .duration-opt{
+    flex:1; padding:20px 0; border-radius:18px; text-align:center;
+    border:1px solid rgba(139,132,184,.25); cursor:pointer;
+    transition:all .25s ease;
+  }
+  .duration-opt.selected{
+    border-color:var(--glow);
+    background:linear-gradient(160deg, rgba(157,127,234,.25), rgba(75,63,140,.15));
+    box-shadow:0 0 24px -4px rgba(157,127,234,.5);
+  }
+  .duration-num{font-family:'Cormorant Garamond',serif; font-size:30px; font-weight:600; color:var(--moon);}
+  .duration-unit{font-size:11px; color:var(--dim); margin-top:2px;}
+
+  .slider-wrap{margin:10px 0 30px;}
+  input[type=range]{
+    width:100%; -webkit-appearance:none; height:4px; border-radius:4px;
+    background:linear-gradient(90deg, var(--iris), var(--glow));
+    outline:none;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none; width:20px; height:20px; border-radius:50%;
+    background:var(--moon); box-shadow:0 0 12px rgba(185,167,240,.8); cursor:pointer;
+  }
+
+  /* ---------- COUNTDOWN ---------- */
+  .countdown-screen{align-items:center; justify-content:center; text-align:center;}
+  .ring-wrap{position:relative; width:220px; height:220px; margin-bottom:30px;}
+  .ring-wrap svg{transform:rotate(-90deg);}
+  .ring-bg{fill:none; stroke:rgba(139,132,184,.15); stroke-width:8;}
+  .ring-fg{fill:none; stroke:url(#ringGrad); stroke-width:8; stroke-linecap:round; transition:stroke-dashoffset 1s linear;}
+  .ring-center{
+    position:absolute; inset:0; display:flex; flex-direction:column;
+    align-items:center; justify-content:center;
+  }
+  .ring-time{font-family:'Cormorant Garamond',serif; font-size:42px; font-weight:600;}
+  .ring-label{font-size:11px; color:var(--dim); letter-spacing:.15em; margin-top:4px; text-transform:uppercase;}
+
+  /* ---------- LOCKED ---------- */
+  .locked-screen{
+    align-items:center; justify-content:center; text-align:center;
+    background:radial-gradient(circle at 50% 25%, #171240, #050418 70%);
+    padding-top:0;
+  }
+  .locked-moon{
+    width:100px; height:100px; border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, #fdfbff, #d9caf8 45%, var(--iris) 100%);
+    box-shadow:0 0 60px 10px rgba(185,167,240,.4);
+    animation:breathe 5s ease-in-out infinite;
+    margin-bottom:26px;
+  }
+  .locked-title{font-family:'Noto Serif SC',serif; font-size:20px; margin-bottom:10px; font-weight:500;}
+  .locked-sub{font-size:12.5px; color:var(--dim); line-height:1.7; margin-bottom:40px; font-weight:300;}
+  .status-row{
+    display:flex; align-items:center; gap:8px;
+    font-size:11.5px; color:var(--dim);
+    border:1px solid rgba(139,132,184,.2); padding:10px 18px; border-radius:30px;
+  }
+  .status-dot{width:6px; height:6px; border-radius:50%; background:var(--danger); box-shadow:0 0 8px var(--danger);}
+
+  .clock{position:absolute; top:20px; left:32px; font-size:12px; color:var(--dim); z-index:40; letter-spacing:.05em;}
+
+  .dev-nav{
+    position:fixed; bottom:16px; left:50%; transform:translateX(-50%);
+    display:flex; gap:6px; z-index:100;
+  }
+  .dev-nav button{
+    background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12);
+    color:var(--dim); font-size:10px; padding:6px 10px; border-radius:8px; cursor:pointer;
+  }
+  .dev-nav button.cur{color:var(--moon); border-color:var(--glow);}
+
+  /* ---------- TAB BAR ---------- */
+  .tabbar{
+    position:absolute; bottom:18px; left:22px; right:22px; height:66px;
+    background:linear-gradient(165deg, rgba(42,34,86,.65), rgba(11,10,34,.75));
+    backdrop-filter:blur(18px);
+    border:1px solid rgba(185,167,240,.16);
+    border-radius:28px;
+    display:none; align-items:center; justify-content:space-around;
+    z-index:60; box-shadow:0 18px 40px -14px rgba(10,6,30,.7), inset 0 1px 0 rgba(255,255,255,.05);
+  }
+  .tabbar.show{display:flex;}
+  .tab-indicator{
+    position:absolute; top:8px; width:50px; height:50px; border-radius:18px;
+    background:radial-gradient(circle at 35% 25%, rgba(185,167,240,.35), rgba(75,63,140,.18) 70%);
+    box-shadow:0 0 22px -2px rgba(157,127,234,.65), inset 0 0 0 1px rgba(185,167,240,.3);
+    transition:left .35s cubic-bezier(.34,1.4,.64,1);
+    pointer-events:none;
+  }
+  .tab-item{
+    position:relative; z-index:2; width:50px; height:50px;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px;
+    cursor:pointer; opacity:.55; transition:opacity .3s ease, transform .3s ease;
+  }
+  .tab-item.active{opacity:1;}
+  .tab-item:active{transform:scale(.92);}
+  .tab-icon{width:19px; height:19px; stroke:var(--dim); fill:none; stroke-width:1.6; transition:stroke .3s ease, filter .3s ease;}
+  .tab-item.active .tab-icon{stroke:var(--moon); filter:drop-shadow(0 0 6px rgba(185,167,240,.8));}
+  .tab-label{font-size:9.5px; color:var(--dim); letter-spacing:.02em;}
+  .tab-item.active .tab-label{color:var(--lavender);}
+  .tab-body{padding-bottom:100px; overflow-y:auto;}
+
+  /* ---------- HISTORY ---------- */
+  .badge{
+    display:inline-flex; align-items:center; gap:5px;
+    font-size:10.5px; padding:4px 10px; border-radius:20px;
+    border:1px solid rgba(185,167,240,.25); color:var(--lavender);
+  }
+  .badge-dot{width:5px; height:5px; border-radius:50%; background:var(--glow);}
+  .night-row{
+    display:flex; align-items:center; gap:14px;
+    padding:14px 0; border-bottom:1px solid rgba(139,132,184,.12);
+  }
+  .night-date{width:44px; font-size:12px; color:var(--dim);}
+  .night-bar-wrap{flex:1; height:8px; background:rgba(139,132,184,.15); border-radius:6px; overflow:hidden;}
+  .night-bar{height:100%; border-radius:6px; background:linear-gradient(90deg, var(--iris), var(--glow));}
+  .night-score{width:34px; text-align:right; font-size:13px; font-weight:600; color:var(--moon);}
+
+  /* ---------- SETTINGS ---------- */
+  .settings-group-title{font-size:11px; color:var(--dim); letter-spacing:.1em; text-transform:uppercase; margin:22px 0 10px;}
+  .settings-row{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 0; border-bottom:1px solid rgba(139,132,184,.12);
+  }
+  .settings-label{font-size:13.5px; color:var(--moon);}
+  .settings-note{font-size:11.5px; color:var(--dim); margin-top:3px; font-weight:300;}
+  .settings-value{font-size:12.5px; color:var(--lavender);}
+
+  /* ---------- AUDIO ---------- */
+  .audio-opt{
+    display:flex; align-items:center; gap:12px;
+    padding:14px 16px; border-radius:16px; margin-bottom:10px;
+    border:1px solid rgba(139,132,184,.22); cursor:pointer; transition:all .2s ease;
+  }
+  .audio-opt.selected{border-color:var(--glow); background:rgba(157,127,234,.12);}
+  .audio-emoji{font-size:20px;}
+  .audio-name{font-size:13.5px; color:var(--moon); font-weight:500;}
+  .audio-desc{font-size:11px; color:var(--dim); margin-top:2px;}
+  .audio-widget{
+    display:flex; align-items:center; gap:10px;
+    border:1px solid rgba(185,167,240,.25); border-radius:30px;
+    padding:8px 16px 8px 10px; margin-top:22px;
+  }
+  .audio-play-dot{
+    width:30px; height:30px; border-radius:50%; background:linear-gradient(120deg,var(--lavender),var(--glow));
+    display:flex; align-items:center; justify-content:center; font-size:12px; color:var(--void); flex-shrink:0;
+  }
+  .audio-bars{display:flex; align-items:center; gap:2px; height:14px;}
+  .audio-bars span{width:2px; background:var(--lavender); border-radius:2px; animation:bar 1s ease-in-out infinite;}
+  .audio-bars span:nth-child(2){animation-delay:.15s;}
+  .audio-bars span:nth-child(3){animation-delay:.3s;}
+  .audio-bars span:nth-child(4){animation-delay:.45s;}
+  @keyframes bar{0%,100%{height:4px;}50%{height:14px;}}
+</style>
+</head>
+<body>
+
+<div class="stage">
+  <div class="phone" id="phone">
+    <div class="notch"></div>
+    <div class="glow glow-1"></div>
+    <div class="glow glow-2"></div>
+    <div class="clock" id="clock">22:47</div>
+
+    <!-- SCREEN 1: HOME -->
+    <div class="screen active tab-body" id="screen-home">
+      <div class="eyebrow">NIGHTVEIL</div>
+      <div class="brand">眠界</div>
+      <div class="brand-sub">让手机先睡，眼睛才能真的休息</div>
+
+      <div class="moon-wrap"><div class="moon"></div></div>
+
+      <div class="card">
+        <div class="card-row">
+          <div>
+            <div class="card-title">睡眠模式</div>
+            <div class="card-desc">开启后到点自动断网锁屏</div>
+          </div>
+          <div class="switch on" id="mainSwitch" onclick="toggleSwitch()">
+            <div class="switch-knob"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-row">
+          <div>
+            <div class="card-title">跟随健康 App 睡眠时间表</div>
+            <div class="card-desc" id="followDesc">已同步：将在 22:50 提醒（提前 10 分钟）</div>
+          </div>
+          <div class="switch on" id="followSwitch" onclick="toggleFollow()">
+            <div class="switch-knob"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" id="manualTimeCard" style="display:none;">
+        <div class="card-desc" style="margin-bottom:10px;">手动设置入睡时间</div>
+        <div class="card-title" style="font-size:22px; font-family:'Cormorant Garamond',serif;">23:00</div>
+        <div class="time-row">
+          <div class="time-pill selected">22:30</div>
+          <div class="time-pill">23:00</div>
+          <div class="time-pill">23:30</div>
+        </div>
+      </div>
+
+      <div class="card" onclick="goTo('editText')" style="cursor:pointer;">
+        <div class="card-row">
+          <div style="flex:1;">
+            <div class="card-title">提醒文案</div>
+            <div class="card-desc" id="textPreview" style="margin-top:4px;">马上到睡觉时间了，确定不趁晚上好好放松劳累的眼部肌肉和手部肌肉吗？</div>
+          </div>
+          <div style="color:var(--lavender); font-size:18px; margin-left:10px;">✎</div>
+        </div>
+      </div>
+
+      <div class="card" onclick="goTo('permission')" style="cursor:pointer;">
+        <div class="card-row">
+          <div>
+            <div class="card-title">系统权限</div>
+            <div class="card-desc" id="permStatus">尚未授权 · 断网锁屏功能需要开启</div>
+          </div>
+          <div style="color:var(--dim); font-size:16px;">›</div>
+        </div>
+      </div>
+
+      <button class="ghost-btn" onclick="goTo('reminder')">模拟：到点提醒 →</button>
+    </div>
+
+    <!-- SCREEN 2: REMINDER -->
+    <div class="screen modal-screen" id="screen-reminder">
+      <div class="modal-icon">🌙</div>
+      <div class="modal-text" id="reminderTextDisplay">马上到睡觉时间了<br>确定不趁晚上<br>好好放松劳累的<br>眼部肌肉和手部肌肉吗？</div>
+      <div class="modal-sub">22:58 · 距离设定的入睡时间还有 2 分钟</div>
+      <button class="primary-btn" onclick="goTo('audio')" style="margin-bottom:12px;">好，去休息</button>
+      <button class="ghost-btn" onclick="goTo('timer')">再玩一会</button>
+    </div>
+
+    <!-- SCREEN 2B: EDIT TEXT -->
+    <div class="screen" id="screen-editText">
+      <div class="eyebrow">自定义</div>
+      <div class="brand" style="font-size:26px;">改成你自己的话</div>
+      <div class="brand-sub">到点提醒时会显示这段文字，写点能真的说服自己的</div>
+
+      <textarea id="textEditor" maxlength="60" oninput="syncTextCount()"
+        style="margin-top:22px; width:100%; min-height:130px; resize:none; background:rgba(75,63,140,.18); border:1px solid rgba(185,167,240,.25); border-radius:16px; padding:16px; color:var(--moon); font-size:14.5px; line-height:1.7; font-family:'Noto Sans SC',sans-serif; outline:none;"
+      >马上到睡觉时间了，确定不趁晚上好好放松劳累的眼部肌肉和手部肌肉吗？</textarea>
+      <div class="card-desc" style="text-align:right; margin-top:6px;"><span id="textCount">33</span> / 60</div>
+
+      <div class="card-desc" style="margin-top:20px; margin-bottom:8px;">或者试试这些：</div>
+      <div style="display:flex; flex-direction:column; gap:8px;">
+        <div class="ghost-btn" style="margin-top:0; text-align:left; padding:12px 16px; font-size:12.5px;" onclick="applyPreset(this,'再刷下去，明天顶着黑眼圈的可是你自己。')">再刷下去，明天顶着黑眼圈的可是你自己。</div>
+        <div class="ghost-btn" style="margin-top:0; text-align:left; padding:12px 16px; font-size:12.5px;" onclick="applyPreset(this,'手机可以等，你的眼睛和颈椎等不了。')">手机可以等，你的眼睛和颈椎等不了。</div>
+      </div>
+
+      <button class="primary-btn" onclick="saveText()">保存</button>
+    </div>
+
+    <!-- SCREEN 2C: PERMISSION EXPLAINER -->
+    <div class="screen" id="screen-permission">
+      <div class="eyebrow">开始之前</div>
+      <div class="brand" style="font-size:24px; line-height:1.4;">需要你亲自<br>授权一次</div>
+      <div class="brand-sub" style="margin-top:10px;">断网和锁屏功能，涉及 iOS 系统级权限，苹果要求必须由手机主人本人确认，App 无法代替你同意。</div>
+
+      <div class="card" style="margin-top:22px;">
+        <div class="card-title" style="margin-bottom:6px;">这项权限会用来做什么</div>
+        <div class="card-desc">仅在你设置的睡眠模式启动时，暂时限制网络与锁定屏幕；随时可以在系统设置里关闭。</div>
+      </div>
+      <div class="card">
+        <div class="card-title" style="margin-bottom:6px;">不会做什么</div>
+        <div class="card-desc">不会读取你的通讯录、照片、聊天记录，也不会在你不知情的情况下自行开启。</div>
+      </div>
+
+      <button class="primary-btn" onclick="requestSystemPermission()">同意，前往系统授权</button>
+      <button class="ghost-btn" onclick="goTo('home')">暂不授权</button>
+    </div>
+
+    <!-- iOS system permission mock overlay -->
+    <div id="sysDialogOverlay" style="display:none; position:absolute; inset:0; z-index:200; background:rgba(0,0,0,.4); align-items:center; justify-content:center; backdrop-filter:blur(2px);">
+      <div style="width:270px; background:#2c2c2e; border-radius:14px; overflow:hidden; box-shadow:0 20px 50px rgba(0,0,0,.5); font-family:'Noto Sans SC',sans-serif;">
+        <div style="padding:18px 16px 14px; text-align:center; border-bottom:1px solid rgba(255,255,255,.15);">
+          <div style="font-size:13.5px; font-weight:600; color:#fff; margin-bottom:6px;">"眠界"想要使用屏幕使用时间</div>
+          <div style="font-size:12px; color:#a8a8ad; line-height:1.5;">用于在睡眠模式开启时限制本机网络与锁定屏幕</div>
+        </div>
+        <div style="display:flex; border-top:1px solid rgba(255,255,255,.15);">
+          <div onclick="answerSystemDialog(false)" style="flex:1; text-align:center; padding:12px; color:#0a84ff; font-size:14.5px; border-right:1px solid rgba(255,255,255,.15); cursor:pointer;">不允许</div>
+          <div onclick="answerSystemDialog(true)" style="flex:1; text-align:center; padding:12px; color:#0a84ff; font-size:14.5px; font-weight:600; cursor:pointer;">允许</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 3: TIMER PICK -->
+    <div class="screen" id="screen-timer">
+      <div class="eyebrow">最后一局</div>
+      <div class="brand" style="font-size:26px;">给自己一点缓冲</div>
+      <div class="brand-sub">时间到了会自动熄屏断网，不用自己记得关</div>
+
+      <div class="duration-grid">
+        <div class="duration-opt" data-min="10" onclick="selectDuration(this,10)">
+          <div class="duration-num">10</div><div class="duration-unit">分钟</div>
+        </div>
+        <div class="duration-opt selected" data-min="15" onclick="selectDuration(this,15)">
+          <div class="duration-num">15</div><div class="duration-unit">分钟</div>
+        </div>
+        <div class="duration-opt" data-min="20" onclick="selectDuration(this,20)">
+          <div class="duration-num">20</div><div class="duration-unit">分钟</div>
+        </div>
+      </div>
+
+      <div class="slider-wrap">
+        <input type="range" min="5" max="20" value="15" id="durSlider" oninput="syncSlider(this.value)">
+        <div class="card-desc" style="margin-top:8px; text-align:center;">拖动微调 · <span id="sliderVal">15</span> 分钟</div>
+      </div>
+
+      <button class="primary-btn" onclick="startCountdown()">开始最后 <span id="btnMin">15</span> 分钟</button>
+    </div>
+
+    <!-- SCREEN 4: COUNTDOWN -->
+    <div class="screen countdown-screen" id="screen-countdown">
+      <div class="eyebrow" style="margin-bottom:22px;">时间到会自动锁定</div>
+      <div class="ring-wrap">
+        <svg width="220" height="220">
+          <defs>
+            <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#b9a7f0"/>
+              <stop offset="100%" stop-color="#4b3f8c"/>
+            </linearGradient>
+          </defs>
+          <circle class="ring-bg" cx="110" cy="110" r="98"></circle>
+          <circle class="ring-fg" id="ringFg" cx="110" cy="110" r="98" stroke-dasharray="616" stroke-dashoffset="0"></circle>
+        </svg>
+        <div class="ring-center">
+          <div class="ring-time" id="ringTime">15:00</div>
+          <div class="ring-label">最后倒计时</div>
+        </div>
+      </div>
+      <div class="card-desc">结束后网络会自动断开，屏幕会自动熄灭</div>
+      <button class="ghost-btn" onclick="goTo('audio')" style="margin-top:24px;">不等了，现在就休息</button>
+    </div>
+
+    <!-- SCREEN 5: LOCKED -->
+    <div class="screen locked-screen" id="screen-locked">
+      <div class="locked-moon"></div>
+      <div class="locked-title">已进入睡眠模式</div>
+      <div class="locked-sub">网络已断开 · 屏幕即将熄灭<br>晚安，好好休息眼睛和双手</div>
+      <div class="status-row"><div class="status-dot"></div>离线 · 07:00 自动解锁</div>
+
+      <div class="audio-widget" id="audioWidget" style="display:none;">
+        <div class="audio-play-dot" id="audioPlayDot">▶</div>
+        <div style="flex:1; text-align:left;">
+          <div style="font-size:12.5px; color:var(--moon);" id="audioNowPlaying">正在播放 · 塔罗解读合集</div>
+          <div style="font-size:10.5px; color:var(--dim);" id="audioHint">静置后将自动淡出暂停</div>
+        </div>
+        <div class="audio-bars" id="audioBars">
+          <span style="height:10px;"></span><span style="height:6px;"></span><span style="height:12px;"></span><span style="height:8px;"></span>
+        </div>
+      </div>
+
+      <button class="ghost-btn" onclick="goTo('home')" style="margin-top:32px;">（演示）回到首页</button>
+    </div>
+
+    <!-- SCREEN 6: AUDIO PICK -->
+    <div class="screen" id="screen-audio">
+      <div class="eyebrow">入睡前</div>
+      <div class="brand" style="font-size:26px;">放点什么听着睡</div>
+      <div class="brand-sub">选好之后手机就可以放下了，检测到长时间静置会自动淡出暂停</div>
+
+      <div style="margin-top:24px;">
+        <div class="audio-opt" onclick="selectAudio(this,'none','安静入睡')">
+          <div class="audio-emoji">🌘</div>
+          <div><div class="audio-name">安静入睡</div><div class="audio-desc">不播放任何声音</div></div>
+        </div>
+        <div class="audio-opt" onclick="selectAudio(this,'noise','雨声白噪音')">
+          <div class="audio-emoji">🌧️</div>
+          <div><div class="audio-name">雨声白噪音</div><div class="audio-desc">真实可播放 · 点击试听</div></div>
+        </div>
+        <div class="audio-opt" onclick="selectAudio(this,'tone','舒缓轻音乐')">
+          <div class="audio-emoji">🎵</div>
+          <div><div class="audio-name">舒缓轻音乐</div><div class="audio-desc">真实可播放 · 点击试听</div></div>
+        </div>
+        <div class="audio-opt selected" onclick="selectAudio(this,'playlist','塔罗解读合集')">
+          <div class="audio-emoji">🔮</div>
+          <div><div class="audio-name">我自己的播放列表</div><div class="audio-desc">交给 Apple Music / 播客继续播放</div></div>
+        </div>
+      </div>
+
+      <button class="ghost-btn" id="previewBtn" onclick="togglePreview()">▶ 试听当前选择</button>
+
+      <div class="card-desc" style="margin-top:14px;">静置超过 <b style="color:var(--lavender);">15 分钟</b> 未拿起手机，音频将淡出并自动暂停，避免开一整夜耗光电量</div>
+
+      <button class="primary-btn" onclick="stopPreview(); goTo('locked'); startAudioDemo();">保存并进入睡眠模式</button>
+    </div>
+
+    <!-- SCREEN 7: HISTORY -->
+    <div class="screen tab-body" id="screen-history">
+      <div class="eyebrow">睡眠记录</div>
+      <div class="brand" style="font-size:26px;">最近 7 晚</div>
+      <div class="brand-sub" style="margin-bottom:10px;">数据来自「健康」App 的睡眠分析</div>
+
+      <div class="card" style="margin-top:16px;">
+        <div class="card-row" style="align-items:flex-start;">
+          <div>
+            <div class="card-desc">昨晚睡眠时长</div>
+            <div class="card-title" style="font-size:26px; font-family:'Cormorant Garamond',serif; margin-top:4px;">7小时12分</div>
+          </div>
+          <span class="badge"><span class="badge-dot"></span>Apple Watch 已同步</span>
+        </div>
+        <div class="card-desc" style="margin-top:10px;">深睡 1h48m · 快速眼动 1h20m · 清醒 14m</div>
+      </div>
+
+      <div class="card">
+        <div class="night-row">
+          <div class="night-date">周四</div>
+          <div class="night-bar-wrap"><div class="night-bar" style="width:88%;"></div></div>
+          <div class="night-score">88</div>
+        </div>
+        <div class="night-row">
+          <div class="night-date">周三</div>
+          <div class="night-bar-wrap"><div class="night-bar" style="width:64%;"></div></div>
+          <div class="night-score">64</div>
+        </div>
+        <div class="night-row">
+          <div class="night-date">周二</div>
+          <div class="night-bar-wrap"><div class="night-bar" style="width:75%;"></div></div>
+          <div class="night-score">75</div>
+        </div>
+        <div class="night-row" style="border-bottom:none;">
+          <div class="night-date">周一</div>
+          <div class="night-bar-wrap"><div class="night-bar" style="width:52%;"></div></div>
+          <div class="night-score">52</div>
+        </div>
+      </div>
+      <div class="card-desc" style="text-align:center; margin-top:4px;">未佩戴 Apple Watch 的夜晚，仅显示估算时长，无阶段细分</div>
+    </div>
+
+    <!-- SCREEN 8: SETTINGS -->
+    <div class="screen tab-body" id="screen-settings">
+      <div class="eyebrow">设置</div>
+      <div class="brand" style="font-size:26px;">按你的习惯来</div>
+
+      <div class="settings-group-title">睡眠触发方式</div>
+      <div class="settings-row">
+        <div><div class="settings-label">跟随健康 App 时间表</div><div class="settings-note">自动读取你在系统里设置的入睡/起床时间</div></div>
+        <div class="switch on" onclick="this.classList.toggle('on')"><div class="switch-knob"></div></div>
+      </div>
+      <div class="settings-row" onclick="goTo('editText')" style="cursor:pointer;">
+        <div><div class="settings-label">到点提醒文案</div><div class="settings-note">自定义提醒时显示的文字</div></div>
+        <div class="settings-value">编辑 ›</div>
+      </div>
+      <div class="settings-row" onclick="goTo('permission')" style="cursor:pointer;">
+        <div><div class="settings-label">系统权限</div><div class="settings-note">断网 / 锁屏所需授权</div></div>
+        <div class="settings-value" id="settingsPermValue">查看 ›</div>
+      </div>
+
+      <div class="settings-group-title">睡前音频</div>
+      <div class="settings-row" onclick="goTo('audio')" style="cursor:pointer;">
+        <div><div class="settings-label">默认播放内容</div><div class="settings-note">进入睡眠模式前自动准备</div></div>
+        <div class="settings-value">塔罗解读合集 ›</div>
+      </div>
+      <div class="settings-row">
+        <div><div class="settings-label">静置自动暂停</div><div class="settings-note">熄屏静置 15 分钟后淡出</div></div>
+        <div class="switch on" onclick="this.classList.toggle('on')"><div class="switch-knob"></div></div>
+      </div>
+
+      <div class="settings-group-title">健康数据</div>
+      <div class="settings-row">
+        <div><div class="settings-label">同步睡眠分析</div><div class="settings-note">读取健康 App 中的睡眠阶段数据</div></div>
+        <div class="switch on" onclick="this.classList.toggle('on')"><div class="switch-knob"></div></div>
+      </div>
+      <div class="settings-row">
+        <div><div class="settings-label">Apple Watch</div><div class="settings-note">已连接，可显示深睡/心率细分</div></div>
+        <span class="badge"><span class="badge-dot"></span>已连接</span>
+      </div>
+    </div>
+
+    <div class="tabbar show" id="tabbar">
+      <div class="tab-indicator" id="tabIndicator"></div>
+      <div class="tab-item active" data-tab="home" onclick="switchTab('home')">
+        <svg class="tab-icon" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <div class="tab-label">首页</div>
+      </div>
+      <div class="tab-item" data-tab="history" onclick="switchTab('history')">
+        <svg class="tab-icon" viewBox="0 0 24 24"><path d="M4 20V10M11 20V4M18 20v-7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <div class="tab-label">历史</div>
+      </div>
+      <div class="tab-item" data-tab="settings" onclick="switchTab('settings')">
+        <svg class="tab-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 13.5a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.56V19.6a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1-1.56 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.56-1H4.4a2 2 0 1 1 0-4h.09a1.7 1.7 0 0 0 1.56-1 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34H10a1.7 1.7 0 0 0 1-1.56V4.4a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.56 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87V10a1.7 1.7 0 0 0 1.56 1h.09a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.56 1z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <div class="tab-label">设置</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="dev-nav" id="devNav"></div>
+
+<script>
+const screens = ['home','reminder','editText','permission','timer','countdown','locked','audio','history','settings'];
+const tabScreens = ['home','history','settings'];
+let countdownTimer = null;
+let audioPauseTimer = null;
+let selectedMinutes = 15;
+let selectedAudio = '塔罗解读合集';
+let selectedAudioType = 'playlist';
+let reminderText = '马上到睡觉时间了，确定不趁晚上好好放松劳累的眼部肌肉和手部肌肉吗？';
+let permissionGranted = false;
+
+function goTo(name){
+  if(name!=='audio' && typeof isPreviewing!=='undefined' && isPreviewing){ stopPreview(); }
+  screens.forEach(s=>{
+    document.getElementById('screen-'+s).classList.toggle('active', s===name);
+  });
+  document.querySelectorAll('.dev-nav button').forEach(b=>{
+    b.classList.toggle('cur', b.dataset.s===name);
+  });
+  document.getElementById('tabbar').classList.toggle('show', tabScreens.includes(name));
+  if(tabScreens.includes(name)){
+    document.querySelectorAll('.tab-item').forEach(t=>t.classList.toggle('active', t.dataset.tab===name));
+    moveIndicator(name);
+  }
+  if(name!=='countdown' && countdownTimer){ clearInterval(countdownTimer); countdownTimer=null; }
+}
+
+function moveIndicator(name){
+  const item = document.querySelector('.tab-item[data-tab="'+name+'"]');
+  const indicator = document.getElementById('tabIndicator');
+  if(item && indicator){ indicator.style.left = item.offsetLeft + 'px'; }
+}
+
+function switchTab(name){ goTo(name); }
+
+function toggleSwitch(){
+  document.getElementById('mainSwitch').classList.toggle('on');
+}
+
+function toggleFollow(){
+  const sw = document.getElementById('followSwitch');
+  sw.classList.toggle('on');
+  const isOn = sw.classList.contains('on');
+  document.getElementById('manualTimeCard').style.display = isOn ? 'none' : 'block';
+  document.getElementById('followDesc').textContent = isOn
+    ? '已同步：将在 22:50 提醒（提前 10 分钟）'
+    : '已关闭，改为按下方手动时间提醒';
+}
+
+function selectAudio(el, type, name){
+  document.querySelectorAll('.audio-opt').forEach(o=>o.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedAudio = name;
+  selectedAudioType = type;
+  if(isPreviewing){ stopPreview(); startPreview(); }
+}
+
+/* ---------- 真实音频引擎（Web Audio API，无需外部文件） ---------- */
+let audioCtx = null;
+let activeNodes = [];
+let isPreviewing = false;
+let masterGain = null;
+
+function ensureCtx(){
+  if(!audioCtx){ audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+  if(audioCtx.state === 'suspended'){ audioCtx.resume(); }
+}
+
+function stopAllAudio(){
+  activeNodes.forEach(n=>{ try{ n.stop(); }catch(e){} });
+  activeNodes = [];
+  if(masterGain){ try{ masterGain.disconnect(); }catch(e){} masterGain=null; }
+}
+
+// 真实白噪音（模拟雨声）：用噪声缓冲区 + 低通滤波
+function playNoise(){
+  ensureCtx();
+  const bufferSize = 2 * audioCtx.sampleRate;
+  const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+  const data = buffer.getChannelData(0);
+  for(let i=0;i<bufferSize;i++){ data[i] = Math.random()*2-1; }
+  const noise = audioCtx.createBufferSource();
+  noise.buffer = buffer; noise.loop = true;
+  const filter = audioCtx.createBiquadFilter();
+  filter.type = 'lowpass'; filter.frequency.value = 900;
+  masterGain = audioCtx.createGain(); masterGain.gain.value = 0.18;
+  noise.connect(filter); filter.connect(masterGain); masterGain.connect(audioCtx.destination);
+  noise.start();
+  activeNodes.push(noise);
+}
+
+// 真实轻音乐：柔和的循环和弦音色（正弦波 + 缓慢包络）
+function playTone(){
+  ensureCtx();
+  masterGain = audioCtx.createGain(); masterGain.gain.value = 0.1;
+  masterGain.connect(audioCtx.destination);
+  const notes = [261.6, 329.6, 392.0, 493.9]; // C E G B，柔和的大七和弦
+  notes.forEach((freq, i)=>{
+    const osc = audioCtx.createOscillator();
+    osc.type = 'sine'; osc.frequency.value = freq;
+    const g = audioCtx.createGain(); g.gain.value = 0;
+    osc.connect(g); g.connect(masterGain);
+    osc.start();
+    const now = audioCtx.currentTime;
+    // 缓慢呼吸式音量变化，营造氛围感
+    for(let t=0; t<40; t++){
+      g.gain.linearRampToValueAtTime(0.25, now + i*0.6 + t*4 + 2);
+      g.gain.linearRampToValueAtTime(0.02, now + i*0.6 + t*4 + 4);
+    }
+    activeNodes.push(osc);
+  });
+}
+
+function startPreview(){
+  if(selectedAudioType==='none' || selectedAudioType==='playlist'){
+    document.getElementById('previewBtn').textContent =
+      selectedAudioType==='playlist' ? '这项将跳转 Apple Music / 播客播放，此处无法试听' : '安静模式没有声音可试听';
+    return;
+  }
+  if(selectedAudioType==='noise') playNoise();
+  if(selectedAudioType==='tone') playTone();
+  isPreviewing = true;
+  document.getElementById('previewBtn').textContent = '❚❚ 停止试听';
+}
+
+function stopPreview(){
+  stopAllAudio();
+  isPreviewing = false;
+  const btn = document.getElementById('previewBtn');
+  if(btn) btn.textContent = '▶ 试听当前选择';
+}
+
+function togglePreview(){
+  isPreviewing ? stopPreview() : startPreview();
+}
+
+function startAudioDemo(){
+  const widget = document.getElementById('audioWidget');
+  clearTimeout(audioPauseTimer);
+  if(selectedAudioType==='none'){ widget.style.display='none'; return; }
+  widget.style.display = 'flex';
+  document.getElementById('audioNowPlaying').textContent = '正在播放 · ' + selectedAudio;
+  document.getElementById('audioHint').textContent = selectedAudioType==='playlist'
+    ? '已交给 Apple Music / 播客播放' : '静置后将自动淡出暂停';
+  document.getElementById('audioPlayDot').textContent = '▶';
+  document.getElementById('audioBars').style.opacity = '1';
+  if(selectedAudioType==='noise') playNoise();
+  if(selectedAudioType==='tone') playTone();
+  // 演示用：8 秒后模拟"检测到长时间静置，自动淡出暂停"（真实场景是 15 分钟）
+  audioPauseTimer = setTimeout(()=>{
+    document.getElementById('audioHint').textContent = '检测到长时间未拿起手机，已自动暂停';
+    document.getElementById('audioPlayDot').textContent = '❚❚';
+    document.getElementById('audioBars').style.opacity = '.25';
+    // 真实淡出后停止
+    if(masterGain){
+      const now = audioCtx.currentTime;
+      masterGain.gain.linearRampToValueAtTime(0, now + 2);
+      setTimeout(stopAllAudio, 2200);
+    }
+  }, 8000);
+}
+
+function selectDuration(el, min){
+  document.querySelectorAll('.duration-opt').forEach(o=>o.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedMinutes = min;
+  document.getElementById('durSlider').value = min;
+  document.getElementById('sliderVal').textContent = min;
+  document.getElementById('btnMin').textContent = min;
+}
+
+function syncSlider(val){
+  selectedMinutes = parseInt(val);
+  document.getElementById('sliderVal').textContent = val;
+  document.getElementById('btnMin').textContent = val;
+  document.querySelectorAll('.duration-opt').forEach(o=>{
+    o.classList.toggle('selected', parseInt(o.dataset.min)===parseInt(val));
+  });
+}
+
+function startCountdown(){
+  goTo('countdown');
+  let totalSeconds = selectedMinutes*60;
+  const fullSeconds = totalSeconds;
+  const circumference = 616;
+  const ringFg = document.getElementById('ringFg');
+  const ringTime = document.getElementById('ringTime');
+
+  clearInterval(countdownTimer);
+  updateRing();
+
+  countdownTimer = setInterval(()=>{
+    totalSeconds--;
+    if(totalSeconds<=0){
+      clearInterval(countdownTimer);
+      goTo('locked');
+      startAudioDemo();
+      return;
+    }
+    updateRing();
+  }, 1000);
+
+  function updateRing(){
+    const m = Math.floor(totalSeconds/60).toString().padStart(2,'0');
+    const s = (totalSeconds%60).toString().padStart(2,'0');
+    ringTime.textContent = m+':'+s;
+    const progress = totalSeconds/fullSeconds;
+    ringFg.setAttribute('stroke-dashoffset', circumference*(1-progress));
+  }
+}
+
+function syncTextCount(){
+  const val = document.getElementById('textEditor').value;
+  document.getElementById('textCount').textContent = val.length;
+}
+
+function applyPreset(el, text){
+  const editor = document.getElementById('textEditor');
+  editor.value = text;
+  syncTextCount();
+}
+
+function saveText(){
+  const val = document.getElementById('textEditor').value.trim();
+  if(val.length === 0) return;
+  reminderText = val;
+  document.getElementById('textPreview').textContent = val;
+  document.getElementById('reminderTextDisplay').innerHTML = val.replace(/([，,。！？])/g, '$1<br>').replace(/<br>$/, '');
+  goTo('home');
+}
+
+function requestSystemPermission(){
+  document.getElementById('sysDialogOverlay').style.display = 'flex';
+}
+
+function answerSystemDialog(allow){
+  document.getElementById('sysDialogOverlay').style.display = 'none';
+  permissionGranted = allow;
+  const status = document.getElementById('permStatus');
+  if(allow){
+    status.textContent = '已授权 · 睡眠模式可正常锁屏断网';
+  } else {
+    status.textContent = '未授权 · 暂时只能提醒，无法自动断网锁屏';
+  }
+  goTo('home');
+}
+
+// dev nav buttons for quickly previewing every screen
+const navNames = {home:'首页',reminder:'提醒',editText:'编辑文案',permission:'权限',timer:'选时长',countdown:'倒计时',locked:'锁定',audio:'选音频',history:'历史',settings:'设置'};
+const devNav = document.getElementById('devNav');
+screens.forEach(s=>{
+  const b = document.createElement('button');
+  b.textContent = navNames[s];
+  b.dataset.s = s;
+  b.onclick = ()=>goTo(s);
+  if(s==='home') b.classList.add('cur');
+  devNav.appendChild(b);
+});
+
+// live clock
+function tick(){
+  const now = new Date();
+  document.getElementById('clock').textContent =
+    now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0');
+}
+tick(); setInterval(tick, 30000);
+window.addEventListener('load', ()=> moveIndicator('home'));
+</script>
+
+</body>
+</html>
